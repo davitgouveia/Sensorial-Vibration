@@ -44,7 +44,10 @@ class VibrationButtonTimer extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        VibrationServiceTimer.vibrate(duration: time.toInt());
+        //Delay of 2 seconds to prevent disturbing the accelerometer when pressing
+        Future.delayed(Duration(seconds: 2), () {
+          VibrationServiceTimer.vibrate(duration: time.toInt());
+        });
       },
       child: Text('Vibrate'),
     );

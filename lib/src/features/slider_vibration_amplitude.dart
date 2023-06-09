@@ -44,7 +44,10 @@ class VibrationButtonAmplitude extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        VibrationServiceAmplitude.vibrate(amplitude: hertz.toInt());
+        //Delay of 2 seconds to prevent disturbing the accelerometer when pressing
+        Future.delayed(Duration(seconds: 2), () {
+          VibrationServiceAmplitude.vibrate(amplitude: hertz.toInt());
+        });
       },
       child: Text('Vibrate'),
     );
