@@ -32,17 +32,17 @@ class _AccelerometerDisplayState extends State<AccelerometerDisplay> {
         children: <Widget>[
           Text(
             'X: ${_userAccelerometerValues?.x ?? 0}',
-            style: TextStyle(fontSize: 24),
+            style: const TextStyle(fontSize: 24),
             textAlign: TextAlign.left,
           ),
           Text(
             'Y: ${_userAccelerometerValues?.y ?? 0}',
-            style: TextStyle(fontSize: 24),
+            style: const TextStyle(fontSize: 24),
             textAlign: TextAlign.left,
           ),
           Text(
             'Z: ${_userAccelerometerValues?.z ?? 0}',
-            style: TextStyle(fontSize: 24),
+            style: const TextStyle(fontSize: 24),
             textAlign: TextAlign.left,
           ),
         ],
@@ -50,3 +50,4 @@ class _AccelerometerDisplayState extends State<AccelerometerDisplay> {
     );
   }
 }
+
