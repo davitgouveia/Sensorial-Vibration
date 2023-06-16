@@ -7,9 +7,11 @@ class VibrationPage extends StatefulWidget {
 }
 
 class _VibrationPageState extends State<VibrationPage> {
+  //Default values
   int duration = 1000;
   int amplitude = 128;
-  bool isVibrating = false;
+  bool isStartButtonEnabled = true;
+  bool isStopButtonEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,11 @@ class _VibrationPageState extends State<VibrationPage> {
               });
             },
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           Text('Amplitude: ${amplitude.toString()}'),
           Slider(
             value: amplitude.toDouble(),
-            min: 0.0,
+            min: 1.0,
             max: 255.0,
             onChanged: (value) {
               setState(() {
@@ -41,14 +43,18 @@ class _VibrationPageState extends State<VibrationPage> {
               });
             },
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           ElevatedButton(
-            onPressed: isVibrating ? null : _startVibration,
-            child: Text('Iniciar Vibração'),
+            onPressed: isStartButtonEnabled ? _startVibration : null,
+            child: const Text('Iniciar Vibração'),
           ),
           ElevatedButton(
-            onPressed: isVibrating ? null : _stopVibration,
-            child: Text('Parar Vibração'),
+            onPressed: isStopButtonEnabled ? _stopVibration : null,
+            child: const Text('Parar Vibração'),
+          ),
+          ElevatedButton(
+            onPressed: _testeVibracao,
+            child: const Text('Teste Vibração'),
           ),
         ],
       ),
@@ -56,24 +62,43 @@ class _VibrationPageState extends State<VibrationPage> {
   }
 
   Future<void> _startVibration() async {
-  bool ?hasVibrator = await Vibration.hasVibrator();
-  if (hasVibrator == true) {
-    setState(() {
-      isVibrating = true;
-    });
-
-    Vibration.vibrate(duration: duration, amplitude: amplitude).then((_) {
+    bool? hasVibrator = await Vibration.hasVibrator();
+    if (hasVibrator == true) {
       setState(() {
-        isVibrating = false;
+        isStartButtonEnabled = false;
+        isStopButtonEnabled = true;
       });
-    });
+
+      Vibration.vibrate(duration: duration, amplitude: amplitude).then((_) {
+        setState(() {
+          isStartButtonEnabled = false;
+        });
+      });
+
+      print('teste');
+
+      //setState to return buttons to original state after vibration ends
+      Future.delayed(Duration(milliseconds: duration), () {
+        setState(() {
+          isStartButtonEnabled = true;
+          isStopButtonEnabled = false;
+        });
+      });
+    }
   }
-}
 
   void _stopVibration() {
     Vibration.cancel();
     setState(() {
-      isVibrating = false;
+      isStopButtonEnabled = false;
+      isStartButtonEnabled = true;
     });
+  }
+
+  //Initial tests with vibration patterns
+  void _testeVibracao() {
+    const teste = [2000, 2000, 2000, 2000, 2000, 2000];
+    Vibration.vibrate(pattern: teste, intensities: [255,128,64,32,16,4]);
+    print('teste');
   }
 }
