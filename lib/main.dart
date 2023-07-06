@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ic_app/src/features/accelerometer/presentation/accelerometer_display.dart';
-import 'src/features/slider_vibration_amplitude.dart';
-import 'src/features/slider_vibration_timer.dart';
+// import 'src/features/slider_vibration_amplitude.dart';
+// import 'src/features/slider_vibration_timer.dart';
 import 'src/features/vibration/presentation/vibration_controller.dart';
+import 'src/features/accelerometer/presentation/accelerometer_data.dart';
 
-void main() => runApp(TabBarApp());
+void main() => runApp(const TabBarApp());
 
 class TabBarApp extends StatelessWidget {
   const TabBarApp({super.key});
@@ -31,12 +32,12 @@ class TabBarApp extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: VibrationSliderScreenTimer(),
+                      child: AccelerometerRecorder(),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: VibrationSliderScreenAmplitudeColumn(),
-                    )
+                      child: AccelerometerRecorder(),
+                    ),
                   ],
                 ),
               ),
@@ -50,11 +51,7 @@ class TabBarApp extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: VibrationPage(),
-                      )
-                    // Padding(
-                    //   padding: const EdgeInsets.all(16.0),
-                    //   child: AccelerometerData(),
-                    // )
+                    )
                   ],
                 ),
               ),

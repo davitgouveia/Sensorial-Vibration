@@ -1,162 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'dart:async';
+import 'package:csv/csv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
-class AccelerometerData extends StatefulWidget {
-  @override
-  _AccelerometerDataState createState() => _AccelerometerDataState();
+// Criando a classe
+class AccelerometerData {
+  double x;
+  double y;
+  double z;
+  DateTime timestamp;
+
+  AccelerometerData(this.x, this.y, this.z, this.timestamp);
+
+  List<dynamic> toList() {
+    return [x, y, z, timestamp.toIso8601String()];
+  }
 }
 
-class _AccelerometerDataState extends State<AccelerometerData> {
-  // UserAccelerometerEvent? _userAccelerometerValues;
+class AccelerometerRecorder extends StatefulWidget {
+  @override
+  _AccelerometerRecorderState createState() => _AccelerometerRecorderState();
+}
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // Initialize the accelerometer listener
-  //   userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-  //     if (mounted) {
-  //       setState(() {
-  //         _userAccelerometerValues = event;
-  //       });
-  //     }
-  //   });
-  // }
+class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
+  late StreamSubscription<UserAccelerometerEvent> _accelerometerSubscription;
+  List<AccelerometerData> _accelerometerDataList = [];
 
-  List<double> xValuesNormal = [];
-  List<double> yValuesNormal = [];
-  List<double> zValuesNormal = [];
+ void startRecording() {
+  _accelerometerDataList.clear();
 
-  List<double> xValuesVibrate = [];
-  List<double> yValuesVibrate = [];
-  List<double> zValuesVibrate = [];
-
-  double xAverageNormal = 0;
-  double yAverageNormal = 0;
-  double zAverageNormal = 0;
-  double xHighestNormal = 0;
-  double yHighestNormal = 0;
-  double zHighestNormal = 0;
-  double xAverageVibrate = 0;
-  double yAverageVibrate = 0;
-  double zAverageVibrate = 0;
-  double xHighestVibrate = 0;
-  double yHighestVibrate = 0;
-  double zHighestVibrate = 0;
-
-  void startRecording() {
-    // Clear the previous values
-    xValuesNormal.clear();
-    yValuesNormal.clear();
-    zValuesNormal.clear();
-
-    xValuesVibrate.clear();
-    yValuesVibrate.clear();
-    zValuesVibrate.clear();
-
-    DateTime startTime = DateTime.now();
-    DateTime endFirstTestTime = startTime.add(const Duration(milliseconds: 5));
-    DateTime endSecondTestTime =
-        startTime.add(const Duration(milliseconds: 10));
-
-    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      DateTime currentTime = DateTime.now();
-      // Check if the current time is within the 10-second range
-      if (currentTime.isAfter(startTime) &&
-          currentTime.isBefore(endFirstTestTime)) {
-        xValuesNormal.add(event.x);
-        yValuesNormal.add(event.y);
-        zValuesNormal.add(event.z);
-        print('test1');
-      } else {
-        //Adicionar Vibração
-
-        while (currentTime.isBefore(endSecondTestTime)) {
-          xValuesVibrate.add(event.x);
-          yValuesVibrate.add(event.y);
-          zValuesVibrate.add(event.z);
-          print('test2');
-        }
-      }
+  _accelerometerSubscription = userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    final accelerometerData = AccelerometerData(event.x, event.y, event.z, DateTime.now());
+    setState(() {
+      _accelerometerDataList.add(accelerometerData);
     });
-    processValues();
+  });
+
+  Timer(const Duration(seconds: 2), stopRecording);
+}
+
+  void stopRecording() {
+    _accelerometerSubscription.cancel();
+    saveDataToCsv();
   }
 
-  double calculateAverage(List<double> values) {
-    if (values.isEmpty) return 0.0;
-    double sum = values.reduce((value, element) => value + element);
-    return sum / values.length;
-    print('test3');
-  }
+  Future<void> saveDataToCsv() async {
+    List<List<dynamic>> rows = [];
+    rows.add(['X', 'Y', 'Z', 'Timestamp']);
 
-  double findHighestValue(List<double> values) {
-    if (values.isEmpty) return 0.0;
-    return values.reduce((value, element) => value > element ? value : element);
-    print('test4');
-  }
+    for (var data in _accelerometerDataList) {
+      rows.add(data.toList());
+    }
 
-  void processValues() {
-    double xAverageNormal = calculateAverage(xValuesNormal);
-    double yAverageNormal = calculateAverage(yValuesNormal);
-    double zAverageNormal = calculateAverage(zValuesNormal);
+    String csvData = const ListToCsvConverter().convert(rows);
 
-    double xHighestNormal = findHighestValue(xValuesNormal);
-    double yHighestNormal = findHighestValue(yValuesNormal);
-    double zHighestNormal = findHighestValue(zValuesNormal);
-
-    double xAverageVibrate = calculateAverage(xValuesVibrate);
-    double yAverageVibrate = calculateAverage(yValuesVibrate);
-    double zAverageVibrate = calculateAverage(zValuesVibrate);
-
-    double xHighestVibrate = findHighestValue(xValuesVibrate);
-    double yHighestVibrate = findHighestValue(yValuesVibrate);
-    double zHighestVibrate = findHighestValue(zValuesVibrate);
-    print('test5');
+    final directory =
+        await getExternalStorageDirectory(); // or getApplicationDocumentsDirectory()
+    if (directory != null) {
+      final file = File('${directory.path}/accelerometer_data.csv');
+      await file.writeAsString(csvData);
+      print('Data saved to CSV file ${file}');
+    } else {
+      print('Unable to access directory for saving CSV file.');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children:[
           ElevatedButton(
-            onPressed: () {
-              startRecording();
-            },
-            child: Text('Start Recording'),
+            onPressed: startRecording,
+            child: const Text('Start Recording'),
           ),
-          SizedBox(height: 16),
-          const Text(
-            'Média sem vibração',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text('X: ${xAverageNormal.toString()}'),
-          Text('Y: ${yAverageNormal.toString()}'),
-          Text('Z: ${zAverageNormal.toString()}'),
-          SizedBox(height: 16),
-          const Text(
-            'Maior valor sem vibração',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text('X: ${xHighestNormal.toString()}'),
-          Text('Y: ${yHighestNormal.toString()}'),
-          Text('Z: ${zHighestNormal.toString()}'),
-          SizedBox(height: 16),
-          const Text(
-            'Média com vibração',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text('X: ${xAverageVibrate.toString()}'),
-          Text('Y: ${yAverageVibrate.toString()}'),
-          Text('Z: ${zAverageVibrate.toString()}'),
-          SizedBox(height: 16),
-          const Text(
-            'Maior valor com vibração',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text('X: ${xHighestVibrate.toString()}'),
-          Text('Y: ${yHighestVibrate.toString()}'),
-          Text('Z: ${zHighestVibrate.toString()}'),
         ],
       ),
     );
