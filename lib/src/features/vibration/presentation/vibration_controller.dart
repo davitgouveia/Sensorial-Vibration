@@ -75,8 +75,6 @@ class _VibrationPageState extends State<VibrationPage> {
         });
       });
 
-      print('teste');
-
       //setState to return buttons to original state after vibration ends
       Future.delayed(Duration(milliseconds: duration), () {
         setState(() {

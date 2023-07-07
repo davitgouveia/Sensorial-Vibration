@@ -40,6 +40,8 @@ dependencies:
   path_provider: ^2.0.15
   open_file: ^3.3.2
   csv: ^5.0.2
+  share_plus: ^7.0.2
+  numberpicker: ^2.1.2
 
 dev_dependencies:
   flutter_test:

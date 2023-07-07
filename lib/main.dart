@@ -33,11 +33,7 @@ class TabBarApp extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: AccelerometerRecorder(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: AccelerometerRecorder(),
-                    ),
+                    )
                   ],
                 ),
               ),
