@@ -34,6 +34,9 @@ class _AmplitudePickerState extends State<AmplitudePicker> {
   }
 }
 
+// Provider da Amplitude
+
+
 // Criando a classe de data do acelerometro
 class AccelerometerData {
   double x;
