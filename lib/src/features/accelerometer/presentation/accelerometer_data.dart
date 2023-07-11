@@ -1,41 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
+// Para manipular CSV
 import 'package:csv/csv.dart';
+// Para criar arquivo no diretório
 import 'package:path_provider/path_provider.dart';
+// Para compartilhar arquivos
 import 'package:share_plus/share_plus.dart';
-import 'package:numberpicker/numberpicker.dart';
-
+import 'package:vibration/vibration.dart';
 import 'dart:io';
-
-// Criando a classe de escolha de amplitude
-class AmplitudePicker extends StatefulWidget {
-  @override
-  _AmplitudePickerState createState() => _AmplitudePickerState();
-}
-
-class _AmplitudePickerState extends State<AmplitudePicker> {
-  int selectedAmplitude = 1;
-
-  @override
-  Widget build(BuildContext context) {
-    return NumberPicker(
-      value: selectedAmplitude,
-      minValue: 1,
-      maxValue: 255,
-      itemHeight: 80,
-      axis: Axis.horizontal,
-      onChanged: (value) {
-        setState(() {
-          selectedAmplitude = value;
-        });
-      },
-    );
-  }
-}
-
-// Provider da Amplitude
-
 
 // Criando a classe de data do acelerometro
 class AccelerometerData {
@@ -51,6 +25,7 @@ class AccelerometerData {
   }
 }
 
+// Classe de gravação do Acelerometro
 class AccelerometerRecorder extends StatefulWidget {
   @override
   _AccelerometerRecorderState createState() => _AccelerometerRecorderState();
@@ -59,10 +34,17 @@ class AccelerometerRecorder extends StatefulWidget {
 class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   late StreamSubscription<UserAccelerometerEvent> _accelerometerSubscription;
   List<AccelerometerData> _accelerometerDataList = [];
+  bool isRecordingDone = false;
 
-  void startRecording() {
+  void startRecording(int selectedAmplitude) {
+    // Limpa a lista para novos testes
     _accelerometerDataList.clear();
 
+    // Quantos segundos o teste ficara parado e vibrando
+    const testeCsv = [5000, 10000];
+    Vibration.vibrate(pattern: testeCsv, intensities: [0, selectedAmplitude]);
+
+    // Listener
     _accelerometerSubscription =
         userAccelerometerEvents.listen((UserAccelerometerEvent event) {
       final accelerometerData =
@@ -71,11 +53,14 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
         _accelerometerDataList.add(accelerometerData);
       });
     });
-
-    Timer(const Duration(seconds: 2), stopRecording);
+    
+    // Alterar a quantidade de acordo com a duração do teste
+    Timer(const Duration(seconds: 15), stopRecording);
+    isRecordingDone = true;
   }
 
   void stopRecording() {
+    // Para o listener
     _accelerometerSubscription.cancel();
     saveDataToCsv();
   }
@@ -91,9 +76,11 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
 
     String csvData = const ListToCsvConverter().convert(rows);
 
+    // Salvando o arquivo CSV
     final directory = await getExternalStorageDirectory();
     if (directory != null) {
-      final filePath = '${directory.path}/accelerometer_data.csv';
+      final filePath =
+          '${directory.path}/accelerometer_data-$selectedAmplitude.csv';
       await File(filePath).writeAsString(csvData);
       print('Data saved to CSV file $filePath');
       return filePath;
@@ -102,12 +89,16 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
     }
   }
 
-  // Share function
+  // Função de compartilhar
   void shareCSV() async {
     final filePath = await saveDataToCsv();
 
-    await Share.shareXFiles([XFile(filePath)], text: 'CSV de teste');
+    await Share.shareXFiles([XFile(filePath)],
+        text: 'CSV de teste $selectedAmplitude');
   }
+
+  // Definindo a amplitude padrão, para iniciar o teste
+  int selectedAmplitude = 128;
 
   @override
   Widget build(BuildContext context) {
@@ -116,14 +107,35 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Valor da amplitude:'),
-          AmplitudePicker(),
-          ElevatedButton(
-            onPressed: startRecording,
-            child: const Text('Começar Gravação de Acelerometro'), 
+          //Formulario
+          Text('Amplitude atual: $selectedAmplitude'),
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                int parsedValue = int.tryParse(value) ?? 1;
+                selectedAmplitude = parsedValue.clamp(1, 255);
+              });
+            },
+            decoration: const InputDecoration(
+              labelText: 'Digite a Amplitude (1-255)',
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly
+            ],
+          ),
+          //Botões
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 20.0),
+            child: ElevatedButton(
+              onPressed: () {
+                startRecording(selectedAmplitude);
+              },
+              child: const Text('Começar Gravação de Acelerometro'),
+            ),
           ),
           ElevatedButton(
-            onPressed: shareCSV,
+            onPressed: isRecordingDone ? shareCSV : null,
             child: const Text('Compartilhar CSV'),
           ),
         ],

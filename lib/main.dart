@@ -19,7 +19,7 @@ class TabBarApp extends StatelessWidget {
           appBar: AppBar(
             bottom: const TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.home), text: 'Home'),
+                Tab(icon: Icon(Icons.assignment), text: 'Gravador CSV'),
                 Tab(icon: Icon(Icons.analytics), text: 'Análise'),
               ],
             ),
