@@ -16,7 +16,7 @@ class AccelerometerData {
   double x;
   double y;
   double z;
-  Duration timestamp;
+  DateTime timestamp;
 
   AccelerometerData(this.x, this.y, this.z, this.timestamp);
 
@@ -36,12 +36,9 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   List<AccelerometerData> _accelerometerDataList = [];
   bool isRecordingDone = false;
 
-  DateTime? _startTime;
-
   void startRecording(int selectedAmplitude) async {
     // Limpa a lista para novos testes
     _accelerometerDataList.clear();
-    // Desativa o botão de compartilhar
     isRecordingDone = false;
 
     // Quantos segundos o teste ficara parado e vibrando
@@ -54,35 +51,26 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
       interval: Sensors.SENSOR_DELAY_FASTEST,
     );
 
-    // Setando tempo inicial
-    _startTime = DateTime.now();
-
     _accelerometerSubscription = stream.listen((sensorEvent) {
-      // Seta o tempo atual e pega a diferença entre o atual e o inicial
-      final currentTime = DateTime.now();
-      final timeElapsed = currentTime.difference(_startTime!);
-
       setState(() {
-        final accelerometerData = AccelerometerData(
-          sensorEvent.data[0],
-          sensorEvent.data[1],
-          sensorEvent.data[2],
-          timeElapsed,
-        );
+        final accelerometerData = AccelerometerData(sensorEvent.data[0],
+            sensorEvent.data[1], sensorEvent.data[2], DateTime.now());
         _accelerometerDataList.add(accelerometerData);
       });
     });
 
     // Alterar a quantidade de acordo com a duração do teste
     Future.delayed(const Duration(seconds: 15), () {
-      stopRecording();
+      stopRecording();  
+      isRecordingDone = true;
+      _accelerometerSubscription.cancel(); // Don't forget to cancel the subscription
     });
+      
   }
 
   void stopRecording() {
     // Para o listener
     _accelerometerSubscription.cancel();
-    isRecordingDone = true; // Habilitando o botão de compartilhar
     saveDataToCsv();
   }
 
