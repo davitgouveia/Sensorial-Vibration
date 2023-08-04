@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// Pacote utilizado para filtrar a entrada do usuário
 import 'package:flutter/services.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 import 'dart:async';
@@ -16,12 +17,12 @@ class AccelerometerData {
   double x;
   double y;
   double z;
-  Duration timestamp;
+  int timestamp;
 
-  AccelerometerData(this.x, this.y, this.z, this.timestamp);
+  AccelerometerData(this.timestamp, this.x, this.y, this.z);
 
   List<dynamic> toList() {
-    return [x, y, z, timestamp];
+    return [timestamp, x, y, z];
   }
 }
 
@@ -60,14 +61,14 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
     _accelerometerSubscription = stream.listen((sensorEvent) {
       // Seta o tempo atual e pega a diferença entre o atual e o inicial
       final currentTime = DateTime.now();
-      final timeElapsed = currentTime.difference(_startTime!);
+      final timeElapsed = currentTime.difference(_startTime!).inMilliseconds;
 
       setState(() {
         final accelerometerData = AccelerometerData(
+          timeElapsed,
           sensorEvent.data[0],
           sensorEvent.data[1],
           sensorEvent.data[2],
-          timeElapsed,
         );
         _accelerometerDataList.add(accelerometerData);
       });
@@ -89,7 +90,7 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   // Saving data to Csv
   Future<String> saveDataToCsv() async {
     List<List<dynamic>> rows = [];
-    rows.add(['X', 'Y', 'Z', 'Timestamp']);
+    rows.add(['Tempo (ms)', 'X (m/s2)', 'Y (m/s2)', 'Z (m/s2)']);
 
     for (var data in _accelerometerDataList) {
       rows.add(data.toList());

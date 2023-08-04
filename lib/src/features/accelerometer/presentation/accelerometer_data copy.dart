@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// Pacote utilizado para filtrar a entrada do usuário
 import 'package:flutter/services.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 import 'dart:async';
@@ -16,12 +17,12 @@ class AccelerometerData {
   double x;
   double y;
   double z;
-  DateTime timestamp;
+  int timestamp;
 
-  AccelerometerData(this.x, this.y, this.z, this.timestamp);
+  AccelerometerData(this.timestamp, this.x, this.y, this.z);
 
   List<dynamic> toList() {
-    return [x, y, z, timestamp];
+    return [timestamp, x, y, z];
   }
 }
 
@@ -36,9 +37,12 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   List<AccelerometerData> _accelerometerDataList = [];
   bool isRecordingDone = false;
 
+  DateTime? _startTime;
+
   void startRecording(int selectedAmplitude) async {
     // Limpa a lista para novos testes
     _accelerometerDataList.clear();
+    // Desativa o botão de compartilhar
     isRecordingDone = false;
 
     // Quantos segundos o teste ficara parado e vibrando
@@ -51,33 +55,42 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
       interval: Sensors.SENSOR_DELAY_FASTEST,
     );
 
+    // Setando tempo inicial
+    _startTime = DateTime.now();
+
     _accelerometerSubscription = stream.listen((sensorEvent) {
+      // Seta o tempo atual e pega a diferença entre o atual e o inicial
+      final currentTime = DateTime.now();
+      final timeElapsed = currentTime.difference(_startTime!).inMilliseconds;
+
       setState(() {
-        final accelerometerData = AccelerometerData(sensorEvent.data[0],
-            sensorEvent.data[1], sensorEvent.data[2], DateTime.now());
+        final accelerometerData = AccelerometerData(
+          timeElapsed,
+          sensorEvent.data[0],
+          sensorEvent.data[1],
+          sensorEvent.data[2],
+        );
         _accelerometerDataList.add(accelerometerData);
       });
     });
 
     // Alterar a quantidade de acordo com a duração do teste
     Future.delayed(const Duration(seconds: 15), () {
-      stopRecording();  
-      isRecordingDone = true;
-      _accelerometerSubscription.cancel(); // Don't forget to cancel the subscription
+      stopRecording();
     });
-      
   }
 
   void stopRecording() {
     // Para o listener
     _accelerometerSubscription.cancel();
+    isRecordingDone = true; // Habilitando o botão de compartilhar
     saveDataToCsv();
   }
 
   // Saving data to Csv
   Future<String> saveDataToCsv() async {
     List<List<dynamic>> rows = [];
-    rows.add(['X', 'Y', 'Z', 'Timestamp']);
+    rows.add(['Tempo (ms)', 'X (m/s2)', 'Y (m/s2)', 'Z (m/s2)']);
 
     for (var data in _accelerometerDataList) {
       rows.add(data.toList());
