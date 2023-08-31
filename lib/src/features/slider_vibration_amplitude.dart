@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 
-
 class VibrationSliderScreenAmplitudeColumn extends StatefulWidget {
   @override
-  _VibrationSliderScreenAmplitudeColumnState createState() => _VibrationSliderScreenAmplitudeColumnState();
+  _VibrationSliderScreenAmplitudeColumnState createState() =>
+      _VibrationSliderScreenAmplitudeColumnState();
 }
 
-class _VibrationSliderScreenAmplitudeColumnState extends State<VibrationSliderScreenAmplitudeColumn> {
+class _VibrationSliderScreenAmplitudeColumnState
+    extends State<VibrationSliderScreenAmplitudeColumn> {
   double _hertz = 0.0;
 
   @override
@@ -27,13 +28,12 @@ class _VibrationSliderScreenAmplitudeColumnState extends State<VibrationSliderSc
             });
           },
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         VibrationButtonAmplitude(hertz: _hertz),
       ],
     );
   }
 }
-
 
 class VibrationButtonAmplitude extends StatelessWidget {
   final double hertz;
@@ -45,11 +45,11 @@ class VibrationButtonAmplitude extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {
         //Delay of 2 seconds to prevent disturbing the accelerometer when pressing
-        Future.delayed(Duration(seconds: 2), () {
+        Future.delayed(const Duration(seconds: 2), () {
           VibrationServiceAmplitude.vibrate(amplitude: hertz.toInt());
         });
       },
-      child: Text('Vibrate'),
+      child: const Text('Vibrate'),
     );
   }
 }

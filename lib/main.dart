@@ -5,7 +5,9 @@ import 'package:ic_app/src/features/accelerometer/presentation/accelerometer_dis
 import 'src/features/vibration/presentation/vibration_controller.dart';
 import 'src/features/accelerometer/presentation/accelerometer_data.dart';
 
-void main() => runApp(const TabBarApp());
+void main() async {
+  runApp(const TabBarApp());
+}
 
 class TabBarApp extends StatelessWidget {
   const TabBarApp({super.key});

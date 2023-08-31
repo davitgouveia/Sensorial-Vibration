@@ -43,6 +43,9 @@ dependencies:
   share_plus: ^7.0.2
   numberpicker: ^2.1.2
   flutter_sensors: ^1.0.1
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:

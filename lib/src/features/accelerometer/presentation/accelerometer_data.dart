@@ -52,7 +52,8 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
     // Listener
     final stream = await SensorManager().sensorUpdates(
       sensorId: Sensors.ACCELEROMETER,
-      interval: Sensors.SENSOR_DELAY_FASTEST,
+      interval:
+          const Duration(milliseconds: 12), // Da um intervalo real de ~20ms
     );
 
     // Setando tempo inicial
@@ -88,7 +89,11 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   }
 
   // Saving data to Csv
-  Future<String> saveDataToCsv() async {
+  Future<String> saveDataToCsv({bool changeAmplitude = false}) async {
+    if (changeAmplitude) {
+      selectedAmplitude = 0;
+    }
+
     List<List<dynamic>> rows = [];
     rows.add(['Tempo (ms)', 'X (m/s2)', 'Y (m/s2)', 'Z (m/s2)']);
 
@@ -104,7 +109,6 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
       final filePath =
           '${directory.path}/accelerometer_data-$selectedAmplitude.csv';
       await File(filePath).writeAsString(csvData);
-      print('Data saved to CSV file $filePath');
       return filePath;
     } else {
       throw Exception('Unable to access directory for saving CSV file.');
@@ -117,6 +121,43 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
 
     await Share.shareXFiles([XFile(filePath)],
         text: 'CSV de teste $selectedAmplitude');
+
+    selectedAmplitude = 128; // Volta a amplitude padrão
+  }
+
+  void startRecordingSemVibracao() async {
+    _accelerometerDataList.clear();
+    isRecordingDone = false;
+
+    // Listener
+    final stream = await SensorManager().sensorUpdates(
+      sensorId: Sensors.ACCELEROMETER,
+      interval:
+          const Duration(milliseconds: 12), // Da um intervalo real de ~20ms
+    );
+
+    _startTime = DateTime.now();
+
+    _accelerometerSubscription = stream.listen((sensorEvent) {
+      final currentTime = DateTime.now();
+      final timeElapsed = currentTime.difference(_startTime!).inMilliseconds;
+
+      setState(() {
+        final accelerometerData = AccelerometerData(
+          timeElapsed,
+          sensorEvent.data[0],
+          sensorEvent.data[1],
+          sensorEvent.data[2],
+        );
+        _accelerometerDataList.add(accelerometerData);
+      });
+    });
+
+    Future.delayed(const Duration(seconds: 10), () async {
+      _accelerometerSubscription.cancel();
+      await saveDataToCsv(changeAmplitude: true);
+      shareCSV();
+    });
   }
 
   // Definindo a amplitude padrão, para iniciar o teste
@@ -125,10 +166,20 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(10.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            margin: const EdgeInsets.only(bottom: 10.0),
+            child: const Text(
+              "Gravador de CSV com vibração",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           //Formulario
           Text('Amplitude atual: $selectedAmplitude'),
           TextField(
@@ -159,6 +210,38 @@ class _AccelerometerRecorderState extends State<AccelerometerRecorder> {
           ElevatedButton(
             onPressed: isRecordingDone ? shareCSV : null,
             child: const Text('Compartilhar CSV'),
+          ),
+          const Divider(
+            height: 30,
+            thickness: 1,
+            color: Colors.blue,
+          ),
+          Container(
+            margin: const EdgeInsets.only(bottom: 10.0),
+            child: const Text(
+              "Gravador de CSV sem vibração",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Text(
+            "Após apertar o botão, espere 10 segundos sem movimentar o aparelho.",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.0,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 20.0),
+            child: ElevatedButton(
+              onPressed: () {
+                startRecordingSemVibracao();
+              },
+              child: const Text('Criar CSV'),
+            ),
           ),
         ],
       ),

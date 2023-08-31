@@ -27,7 +27,7 @@ class _VibrationSliderScreenStateTimer extends State<VibrationSliderScreenTimer>
             });
           },
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         VibrationButtonTimer(time: _time),
       ],
     );
@@ -45,11 +45,11 @@ class VibrationButtonTimer extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {
         //Delay of 2 seconds to prevent disturbing the accelerometer when pressing
-        Future.delayed(Duration(seconds: 2), () {
+        Future.delayed(const Duration(seconds: 2), () {
           VibrationServiceTimer.vibrate(duration: time.toInt());
         });
       },
-      child: Text('Vibrate'),
+      child: const Text('Vibrate'),
     );
   }
 }

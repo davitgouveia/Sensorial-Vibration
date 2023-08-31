@@ -16,7 +16,7 @@ class _VibrationPageState extends State<VibrationPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -97,6 +97,5 @@ class _VibrationPageState extends State<VibrationPage> {
   void _testeVibracao() {
     const teste = [2000, 2000, 2000, 2000, 2000, 2000];
     Vibration.vibrate(pattern: teste, intensities: [255,128,64,32,16,4]);
-    print('teste');
   }
 }
