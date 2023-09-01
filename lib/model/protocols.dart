@@ -19,10 +19,10 @@ class Protocols {
 
   factory Protocols.fromSqfliteDatabase(Map<String, dynamic> map) => Protocols(
       id: map['id']?.toInt() ?? 0,
-      name: map['Nome'] ?? 'null',
-      amplitude: map['Amplitude'] ?? 128,
-      time: map['Tempo'] ?? 1000,
-      type: map['Tipo'] ?? 'A',
-      percentageUP: map['Porcentagem Incremento'] ?? 30,
-      percentageDOWN: map['Porcentagem Decremento'] ?? 20);
+      name: map['name'] ?? 'null',
+      amplitude: map['amplitude'] ?? 128,
+      time: map['time'] ?? 1000,
+      type: map['type'] ?? 'A',
+      percentageUP: map['percentageUP'] ?? 30,
+      percentageDOWN: map['percentageDOWN'] ?? 20);
 }

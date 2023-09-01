@@ -48,12 +48,12 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                       ),
                     )
                   : ListView.separated(
-                      separatorBuilder: (context, index) => const Divider(
-                        color: Color.fromRGBO(0, 0, 0, 0.2),
-                      ),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemCount: protocols.length,
                       itemBuilder: (context, index) {
                         final protocol = protocols[index];
+                        print("Protocol name: ${protocol.name}");
                         return ListTile(
                             title: Text(
                               protocol.name,
@@ -74,17 +74,10 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                                   context: context,
                                   builder: (context) => CreateProtocolsWidget(
                                       protocol: protocol,
-                                      onSubmit: (protocolData) async {
+                                      onSubmit: (name) async {
                                         await sensorialVibrationDB.update(
-                                            id: protocolData.id,
-                                            name: protocolData.name,
-                                            amplitude: protocolData.amplitude,
-                                            time: protocolData.time,
-                                            type: protocolData.type,
-                                            percentageUP:
-                                                protocolData.percentageUP,
-                                            percentageDOWN:
-                                                protocolData.percentageDOWN);
+                                            id: protocol.id,
+                                            name: protocol.name);
                                         fetchProtocols();
                                         if (!mounted) return;
                                         Navigator.of(context).pop();
@@ -100,16 +93,15 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (_) =>
-                  CreateProtocolsWidget(onSubmit: (protocolData) async {
+              builder: (_) => CreateProtocolsWidget(onSubmit: (text) async {
                 await sensorialVibrationDB.create(
-                  name: protocolData.name,
-                  amplitude: protocolData.amplitude,
-                  time: protocolData.time,
-                  type: protocolData.type,
-                  percentageUP: protocolData.percentageUP,
-                  percentageDOWN: protocolData.percentageDOWN,
-                );
+                    name: text,
+                    //placeholder, e necessario todas essas informaçoes para inserir
+                    amplitude: 128,
+                    time: 1000,
+                    type: 'amplitude',
+                    percentageUP: 30,
+                    percentageDOWN: 20);
                 if (!mounted) return;
                 fetchProtocols();
                 Navigator.of(context).pop();
