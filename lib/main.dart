@@ -4,6 +4,7 @@ import 'package:ic_app/src/features/accelerometer/presentation/accelerometer_dis
 // import 'src/features/slider_vibration_timer.dart';
 import 'src/features/vibration/presentation/vibration_controller.dart';
 import 'src/features/accelerometer/presentation/accelerometer_data.dart';
+import 'src/features/protocol/presentation/protocol_creation.dart';
 
 void main() async {
   runApp(const TabBarApp());
@@ -16,12 +17,13 @@ class TabBarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
           appBar: AppBar(
             bottom: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.assignment), text: 'Gravador CSV'),
+                Tab(icon: Icon(Icons.list), text: 'Protocolos'),
                 Tab(icon: Icon(Icons.analytics), text: 'Análise'),
               ],
             ),
@@ -33,12 +35,13 @@ class TabBarApp extends StatelessWidget {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: AccelerometerRecorder(),
                     )
                   ],
                 ),
               ),
+              const ProtocolsPage(),
               SingleChildScrollView(
                 child: Column(
                   children: [

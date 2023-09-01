@@ -27,7 +27,7 @@ class SensorialVibrationDB {
       percentageDOWN}) async {
     final database = await DatabaseService().database;
     return await database.rawInsert(
-      '''INSERT INTO $tableName (id,name,amplitude,time,type,percentageUP,percentageDOWN) VALUES (?,?,?,?,?,?,?)''',
+      '''INSERT INTO $tableName (name,amplitude,time,type,percentageUP,percentageDOWN) VALUES (?,?,?,?,?,?)''',
       [name, amplitude, time, type, percentageUP, percentageDOWN],
     );
   }
