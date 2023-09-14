@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ic_app/model/protocols.dart';
 import 'package:ic_app/src/features/protocol/presentation/widget/create_protocols_widget.dart';
 import 'package:ic_app/database/sensorialVibration_db.dart';
+import 'package:ic_app/src/features/protocol/presentation/run_protocol_page.dart';
 
 class ProtocolsPage extends StatefulWidget {
   const ProtocolsPage({super.key});
@@ -36,7 +37,6 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
               return const Center(child: CircularProgressIndicator());
             } else {
               final protocols = snapshot.data!;
-
               return protocols.isEmpty
                   ? const Center(
                       child: Text(
@@ -62,12 +62,30 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                             ),
                             subtitle: Text(
                                 "A(${protocol.amplitude}) T(${protocol.time}) t(${protocol.type}) up(${protocol.percentageUP}) down(${protocol.percentageDOWN})"),
-                            trailing: IconButton(
-                              onPressed: () async {
-                                await sensorialVibrationDB.delete(protocol.id);
-                                fetchProtocols();
-                              },
-                              icon: const Icon(Icons.delete, color: Colors.red),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () async {
+                                    await sensorialVibrationDB
+                                        .delete(protocol.id);
+                                    fetchProtocols();
+                                  },
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      builder: (context) =>
+                                          RunProtocolPage(protocol: protocol),
+                                    ));
+                                  },
+                                  icon: const Icon(Icons.play_arrow,
+                                      color: Colors.green),
+                                ),
+                              ],
                             ),
                             onTap: () {
                               showDialog(
