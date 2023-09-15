@@ -10,28 +10,46 @@ class RunProtocolPage extends StatefulWidget {
   _RunProtocolPageState createState() => _RunProtocolPageState();
 }
 
-void vibrate(int amplitude, int tempo) {
-  Vibration.vibrate(duration: tempo, amplitude: amplitude);
-}
-
 int decreaseValue(int value, int rate) {
   double percentage = rate / 100.0;
   double decreasedValue = value - (value * percentage);
+  int finalValue = decreasedValue.round();
 
-  return decreasedValue.round();
+  if (finalValue == value && finalValue > 1) {
+    finalValue--;
+  }
+
+  return finalValue;
 }
 
-int increaseValue(int value, int rate) {
+int increaseValue(int value, int rate, bool testResult) {
   double percentage = rate / 100.0;
   double increasedValue = value + (value * percentage);
+  int finalValue = increasedValue.round();
 
-  return increasedValue.round();
+  if (finalValue > 255 && testResult) {
+    return 255;
+  }
+  if (finalValue == value) {
+    finalValue++;
+  }
+
+  return finalValue;
 }
 
 class _RunProtocolPageState extends State<RunProtocolPage> {
   bool isProtocolRunning = false;
+  bool isVibrating = false;
+  bool nextStepAvailable = false;
+
   late int currentVibration;
   late int currentTime;
+  late String protocolType;
+  late int rateUP;
+  late int rateDOWN;
+
+  late int mutableValue;
+  late bool testResult;
 
   @override
   void initState() {
@@ -39,15 +57,69 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
     // Initialize the variables here
     currentVibration = widget.protocol.amplitude;
     currentTime = widget.protocol.time;
+    protocolType = widget.protocol.type;
+    rateUP = widget.protocol.percentageUP;
+    rateDOWN = widget.protocol.percentageDOWN;
+  }
+
+  bool checkProtocolType(String type) {
+    if (type == 'Amplitude') {
+      mutableValue = currentVibration;
+      return testResult = true;
+    } else {
+      mutableValue = currentTime;
+    }
+    return testResult = false;
   }
 
   void startProtocol() {
-    int vibration =
-        decreaseValue(currentVibration, widget.protocol.percentageDOWN);
-    // Logic to start the test
+    checkProtocolType(protocolType);
     setState(() {
       isProtocolRunning = true;
-      currentVibration = vibration; // Update the test status
+    });
+  }
+
+  void protocolStep() {
+    setState(() {
+      isVibrating = true;
+    });
+
+    Vibration.vibrate(duration: currentTime, amplitude: currentVibration)
+        .then((_) {
+      Future.delayed(Duration(milliseconds: currentTime), () {
+        setState(() {
+          isVibrating = false;
+        });
+      });
+    });
+
+    setState(() {
+      currentVibration;
+      currentTime;
+    });
+  }
+
+  void answerYes() {
+    if (testResult) {
+      currentVibration = decreaseValue(mutableValue, rateDOWN);
+    } else {
+      currentTime = decreaseValue(mutableValue, rateDOWN);
+    }
+    setState(() {
+      currentVibration;
+      currentTime;
+    });
+  }
+
+  void answerNo() {
+    if (testResult) {
+      currentVibration = increaseValue(mutableValue, rateUP, testResult);
+    } else {
+      currentTime = increaseValue(mutableValue, rateUP, testResult);
+    }
+    setState(() {
+      currentVibration;
+      currentTime;
     });
   }
 
@@ -99,10 +171,27 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
               color: Color.fromRGBO(0, 0, 0, 0.6),
             ),
             Text(
-              isProtocolRunning ? 'Protocolo em execução' : 'Protocolo parado',
+              isProtocolRunning ? 'Protocolo em Execução' : 'Protocolo Parado',
               style: TextStyle(
                 fontSize: 16,
                 color: isProtocolRunning ? Colors.green : Colors.red,
+              ),
+            ),
+            Visibility(
+              visible: isVibrating,
+              replacement: const Text(
+                'Não Vibrando',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.red,
+                ),
+              ),
+              child: const Text(
+                'Vibrando',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.blue,
+                ),
               ),
             ),
             Text(
@@ -110,7 +199,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              'Tempo atual: ${widget.protocol.time}',
+              'Tempo atual: $currentTime',
               style: const TextStyle(fontSize: 12),
             ),
             const Divider(
@@ -123,7 +212,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Handle "Sim" button press
+                      answerYes();
                     },
                     style: ButtonStyle(
                       fixedSize: MaterialStateProperty.all<Size>(
@@ -140,7 +229,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Handle "Não" button press
+                      answerNo();
                     },
                     style: ButtonStyle(
                       fixedSize: MaterialStateProperty.all<Size>(
@@ -169,7 +258,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Handle "Next" button press
+                      protocolStep();
                     },
                     child: const Text('Próxima etapa',
                         style: TextStyle(fontSize: 18)),
