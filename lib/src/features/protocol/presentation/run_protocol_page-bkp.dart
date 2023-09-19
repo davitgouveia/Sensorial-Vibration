@@ -54,12 +54,16 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   late bool testResult; // True = Amplitude, False = Tempo
   late int mutableValue;
 
+  //Reversão
   int revertionCount = 0;
+  String previousAnswer = '';
+  bool isFirstDecisionMade = true;
+
+  List<Map<String, dynamic>> protocolSteps = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize the variables here
     currentVibration = widget.protocol.amplitude;
     currentTime = widget.protocol.time;
     protocolType = widget.protocol.type;
@@ -85,6 +89,17 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   }
 
   void protocolStep() {
+    // Record the information before moving to the next step
+    print(isFirstDecisionMade);
+    print(revertionCount);
+    Map<String, dynamic> stepData = {
+      'Decisao': previousAnswer,
+      'Amplitude': currentVibration,
+      'Tempo': currentTime,
+    };
+    protocolSteps.add(stepData);
+    print(stepData);
+
     setState(() {
       isVibrating = true;
     });
@@ -113,20 +128,36 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   void answerYes() {
     setState(() {
       mutableValue = decreaseValue(mutableValue, rateDOWN);
+      String newAnswer = 'Sim';
       testResult
           ? (currentVibration = mutableValue)
           : (currentTime = mutableValue);
       enableAnswer(false);
+
+      if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
+        revertionCount++;
+      } else {
+        isFirstDecisionMade = false;
+      }
+      previousAnswer = newAnswer;
     });
   }
 
   void answerNo() {
     setState(() {
       mutableValue = increaseValue(mutableValue, rateUP, testResult);
+      String newAnswer = 'Não';
       testResult
           ? (currentVibration = mutableValue)
           : (currentTime = mutableValue);
       enableAnswer(false);
+
+      if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
+        revertionCount++;
+      } else {
+        isFirstDecisionMade = false;
+      }
+      previousAnswer = newAnswer;
     });
   }
 

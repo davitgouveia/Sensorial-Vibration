@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ic_app/model/protocols.dart';
+import 'package:ic_app/src/features/protocol/presentation/result_protocol_page.dart';
 import 'package:vibration/vibration.dart';
 
 class RunProtocolPage extends StatefulWidget {
@@ -45,6 +46,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   bool yesAnswerEnabled = false;
   bool noAnswerEnabled = false;
 
+  int currentStep = 0;
   late int currentVibration;
   late int currentTime;
   late String protocolType;
@@ -56,7 +58,8 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
   //Reversão
   int revertionCount = 0;
-  String previousAnswer = '';
+  String reversion = 'Nao';
+  String previousAnswer = 'Inicio';
   bool isFirstDecisionMade = true;
 
   List<Map<String, dynamic>> protocolSteps = [];
@@ -89,35 +92,41 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   }
 
   void protocolStep() {
-    // Record the information before moving to the next step
-    print(isFirstDecisionMade);
-    print(revertionCount);
     Map<String, dynamic> stepData = {
+      'Etapa': currentStep,
       'Decisao': previousAnswer,
       'Amplitude': currentVibration,
       'Tempo': currentTime,
+      'Reversao': reversion
     };
+
     protocolSteps.add(stepData);
-    print(stepData);
+    currentStep++;
 
-    setState(() {
-      isVibrating = true;
-    });
+    reversion = 'Nao';
 
-    Vibration.vibrate(duration: currentTime, amplitude: currentVibration)
-        .then((_) {
-      Future.delayed(Duration(milliseconds: currentTime), () {
-        setState(() {
-          isVibrating = false;
-        });
-        enableAnswer(true);
+    if (revertionCount == 2) {
+      stopProtocol();
+    } else {
+      setState(() {
+        isVibrating = true;
       });
-    });
 
-    setState(() {
-      currentVibration;
-      currentTime;
-    });
+      Vibration.vibrate(duration: currentTime, amplitude: currentVibration)
+          .then((_) {
+        Future.delayed(Duration(milliseconds: currentTime), () {
+          setState(() {
+            isVibrating = false;
+          });
+          enableAnswer(true);
+        });
+      });
+
+      setState(() {
+        currentVibration;
+        currentTime;
+      });
+    }
   }
 
   void enableAnswer(value) {
@@ -136,6 +145,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
       if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
         revertionCount++;
+        reversion = 'Sim';
       } else {
         isFirstDecisionMade = false;
       }
@@ -146,7 +156,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   void answerNo() {
     setState(() {
       mutableValue = increaseValue(mutableValue, rateUP, testResult);
-      String newAnswer = 'Não';
+      String newAnswer = 'Nao';
       testResult
           ? (currentVibration = mutableValue)
           : (currentTime = mutableValue);
@@ -154,6 +164,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
       if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
         revertionCount++;
+        reversion = 'Sim';
       } else {
         isFirstDecisionMade = false;
       }
@@ -162,10 +173,16 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   }
 
   void stopProtocol() {
-    // Logic to stop the test
     setState(() {
-      isProtocolRunning = false; // Update the test status
+      isProtocolRunning = false;
     });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultPage(
+            protocolSteps: protocolSteps, protocolName: widget.protocol.name),
+      ),
+    );
   }
 
   @override
@@ -204,7 +221,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
               'Porcentagem Decremento: ${widget.protocol.percentageDOWN}%',
               style: const TextStyle(fontSize: 14),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             const Divider(
               color: Color.fromRGBO(0, 0, 0, 0.6),
             ),
@@ -300,18 +317,29 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: isProtocolRunning ? stopProtocol : startProtocol,
-                    child: Text(isProtocolRunning ? 'Parar' : 'Iniciar',
-                        style: const TextStyle(fontSize: 18)),
+                    child: ElevatedButton(
+                  onPressed: () {
+                    if (isProtocolRunning && yesAnswerEnabled) {
+                      // If the protocol is running and answers are disabled, stop it
+                      stopProtocol();
+                    } else if (!isProtocolRunning) {
+                      // If the protocol is not running, start it
+                      startProtocol();
+                    }
+                  },
+                  child: Text(
+                    isProtocolRunning ? 'Parar' : 'Iniciar',
+                    style: const TextStyle(fontSize: 18),
                   ),
-                ),
-                SizedBox(width: 30),
+                  // Disable the button if protocol is running and answers are enabled
+                )),
+                const SizedBox(width: 30),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      protocolStep();
-                    },
+                    onPressed:
+                        isProtocolRunning && !yesAnswerEnabled && !isVibrating
+                            ? () => protocolStep()
+                            : null,
                     child: const Text('Próxima etapa',
                         style: TextStyle(fontSize: 18)),
                   ),
