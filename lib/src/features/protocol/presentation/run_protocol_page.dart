@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ic_app/model/protocols.dart';
 import 'package:ic_app/src/features/protocol/presentation/result_protocol_page.dart';
 import 'package:vibration/vibration.dart';
+import 'package:overlay_support/overlay_support.dart';
 
 class RunProtocolPage extends StatefulWidget {
   final Protocols protocol;
@@ -38,6 +39,17 @@ int increaseValue(int value, int rate, bool testResult) {
   return finalValue;
 }
 
+void showAutoDismissNotification(BuildContext context) {
+  showSimpleNotification(
+    const Text('Notification Title'),
+    subtitle: const Text('This notification will disappear in 3 seconds.'),
+    background: Colors.red, // Red background color
+    autoDismiss: true, // Notification will automatically disappear
+    duration: const Duration(
+        seconds: 3), // Duration for how long the notification should be visible
+  );
+}
+
 class _RunProtocolPageState extends State<RunProtocolPage> {
   bool isProtocolRunning = false;
   bool isVibrating = false;
@@ -52,6 +64,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   late String protocolType;
   late int rateUP;
   late int rateDOWN;
+  late int reversionsTotal;
 
   late bool testResult; // True = Amplitude, False = Tempo
   late int mutableValue;
@@ -61,6 +74,11 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   String reversion = 'Nao';
   String previousAnswer = 'Inicio';
   bool isFirstDecisionMade = true;
+
+  //Median
+  int previousValue = 0;
+  List<int> mediumValues = [];
+  late double medium;
 
   List<Map<String, dynamic>> protocolSteps = [];
 
@@ -72,6 +90,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
     protocolType = widget.protocol.type;
     rateUP = widget.protocol.percentageUP;
     rateDOWN = widget.protocol.percentageDOWN;
+    reversionsTotal = widget.protocol.reversions;
   }
 
   bool checkProtocolType(String type) {
@@ -93,7 +112,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
   void protocolStep() {
     Map<String, dynamic> stepData = {
-      'Etapa': currentStep,
+      'Passo': currentStep,
       'Decisao': previousAnswer,
       'Amplitude': currentVibration,
       'Tempo': currentTime,
@@ -105,7 +124,8 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
     reversion = 'Nao';
 
-    if (revertionCount == 2) {
+    // Reversoes necessarias para finalizar teste
+    if (revertionCount == reversionsTotal) {
       stopProtocol();
     } else {
       setState(() {
@@ -136,6 +156,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
   void answerYes() {
     setState(() {
+      previousValue = mutableValue;
       mutableValue = decreaseValue(mutableValue, rateDOWN);
       String newAnswer = 'Sim';
       testResult
@@ -145,6 +166,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
       if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
         revertionCount++;
+        mediumValues.add(previousValue);
         reversion = 'Sim';
       } else {
         isFirstDecisionMade = false;
@@ -155,6 +177,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
   void answerNo() {
     setState(() {
+      previousValue = mutableValue;
       mutableValue = increaseValue(mutableValue, rateUP, testResult);
       String newAnswer = 'Nao';
       testResult
@@ -164,6 +187,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
 
       if (isFirstDecisionMade == false && newAnswer != previousAnswer) {
         revertionCount++;
+        mediumValues.add(previousValue);
         reversion = 'Sim';
       } else {
         isFirstDecisionMade = false;
@@ -175,14 +199,31 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
   void stopProtocol() {
     setState(() {
       isProtocolRunning = false;
+      medium = calcMedium(mediumValues);
     });
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ResultPage(
-            protocolSteps: protocolSteps, protocolName: widget.protocol.name),
+          protocolSteps: protocolSteps,
+          protocolName: widget.protocol.name,
+          medium: medium,
+        ),
       ),
     );
+  }
+
+  double calcMedium(List<int> numbers) {
+    if (numbers.isEmpty) {
+      throw Exception("A lista está vazia. A média não pode ser calculada.");
+    }
+
+    int sum = 0;
+    for (var value in numbers) {
+      sum += value;
+    }
+
+    return sum / numbers.length.toDouble();
   }
 
   @override
@@ -221,6 +262,10 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
               'Porcentagem Decremento: ${widget.protocol.percentageDOWN}%',
               style: const TextStyle(fontSize: 14),
             ),
+            Text(
+              'Reversões: ${widget.protocol.reversions}',
+              style: const TextStyle(fontSize: 14),
+            ),
             const SizedBox(height: 5),
             const Divider(
               color: Color.fromRGBO(0, 0, 0, 0.6),
@@ -255,6 +300,10 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
             ),
             Text(
               'Tempo atual: $currentTime',
+              style: const TextStyle(fontSize: 12),
+            ),
+            Text(
+              'Total de reversões: $revertionCount',
               style: const TextStyle(fontSize: 12),
             ),
             const Divider(
@@ -340,7 +389,7 @@ class _RunProtocolPageState extends State<RunProtocolPage> {
                         isProtocolRunning && !yesAnswerEnabled && !isVibrating
                             ? () => protocolStep()
                             : null,
-                    child: const Text('Próxima etapa',
+                    child: const Text('Próximo passo',
                         style: TextStyle(fontSize: 18)),
                   ),
                 ),

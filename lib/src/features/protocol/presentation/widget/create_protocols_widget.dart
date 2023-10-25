@@ -22,6 +22,7 @@ class _CreateProtocolsWidgetState extends State<CreateProtocolsWidget> {
   final typeController = TextEditingController();
   final percentageUPController = TextEditingController();
   final percentageDOWNController = TextEditingController();
+  final reversionsController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
 
@@ -39,6 +40,7 @@ class _CreateProtocolsWidgetState extends State<CreateProtocolsWidget> {
       percentageUPController.text = widget.protocol!.percentageUP.toString();
       percentageDOWNController.text =
           widget.protocol!.percentageDOWN.toString();
+      reversionsController.text = widget.protocol!.reversions.toString();
     }
   }
 
@@ -145,6 +147,23 @@ class _CreateProtocolsWidgetState extends State<CreateProtocolsWidget> {
                   return null;
                 },
               ),
+              TextFormField(
+                controller: reversionsController,
+                decoration: const InputDecoration(
+                    labelText: 'Reversões', hintText: 'Numero 1-100'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final intValue = int.tryParse(value);
+                    if (intValue == null || intValue < 1 || intValue > 100) {
+                      return 'Valor entre 1 e 100';
+                    }
+                  } else {
+                    return 'Quantidade de reversões necessária';
+                  }
+                  return null;
+                },
+              ),
             ],
           ),
         ),
@@ -154,15 +173,15 @@ class _CreateProtocolsWidgetState extends State<CreateProtocolsWidget> {
           onPressed: () {
             if (formKey.currentState!.validate()) {
               final protocolData = Protocols(
-                id: widget.protocol?.id ?? 0,
-                name: nameController.text,
-                amplitude: int.tryParse(amplitudeController.text) ?? 128,
-                time: int.tryParse(timeController.text) ?? 1000,
-                type: selectedType,
-                percentageUP: int.tryParse(percentageUPController.text) ?? 30,
-                percentageDOWN:
-                    int.tryParse(percentageDOWNController.text) ?? 20,
-              );
+                  id: widget.protocol?.id ?? 0,
+                  name: nameController.text,
+                  amplitude: int.tryParse(amplitudeController.text) ?? 128,
+                  time: int.tryParse(timeController.text) ?? 1000,
+                  type: selectedType,
+                  percentageUP: int.tryParse(percentageUPController.text) ?? 30,
+                  percentageDOWN:
+                      int.tryParse(percentageDOWNController.text) ?? 20,
+                  reversions: int.tryParse(reversionsController.text) ?? 10);
 
               widget.onSubmit(protocolData);
             }

@@ -6,6 +6,7 @@ class Protocols {
   final String type;
   final int percentageUP;
   final int percentageDOWN;
+  final int reversions;
 
   const Protocols({
     required this.id,
@@ -15,6 +16,7 @@ class Protocols {
     required this.type,
     required this.percentageUP,
     required this.percentageDOWN,
+    required this.reversions,
   });
 
   factory Protocols.fromSqfliteDatabase(Map<String, dynamic> map) => Protocols(
@@ -24,5 +26,6 @@ class Protocols {
       time: map['time'] ?? 1000,
       type: map['type'] ?? 'A',
       percentageUP: map['percentageUP'] ?? 30,
-      percentageDOWN: map['percentageDOWN'] ?? 20);
+      percentageDOWN: map['percentageDOWN'] ?? 20,
+      reversions: map['reversions'] ?? 10);
 }

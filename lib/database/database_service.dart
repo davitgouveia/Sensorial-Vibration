@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:ic_app/database/sensorialVibration_db.dart';
+import 'package:ic_app/database/sensorial_vibration_db.dart';
 
 class DatabaseService {
   Database? _database;

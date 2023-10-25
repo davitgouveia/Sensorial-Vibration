@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ic_app/src/features/accelerometer/presentation/accelerometer_display.dart';
-// import 'src/features/slider_vibration_amplitude.dart';
-// import 'src/features/slider_vibration_timer.dart';
 import 'src/features/vibration/presentation/vibration_controller.dart';
 import 'src/features/accelerometer/presentation/accelerometer_data.dart';
 import 'src/features/protocol/presentation/protocol_creation.dart';

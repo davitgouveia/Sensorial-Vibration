@@ -14,6 +14,7 @@ class SensorialVibrationDB {
     "type" TEXT NOT NULL,
     "percentageUP" INTEGER NOT NULL,
     "percentageDOWN" INTEGER NOT NULL,
+    "reversions" INTEGER NOT NULL,
     PRIMARY KEY ("id" AUTOINCREMENT)
   );""");
   }
@@ -24,11 +25,12 @@ class SensorialVibrationDB {
       time,
       type,
       percentageUP,
-      percentageDOWN}) async {
+      percentageDOWN,
+      reversions}) async {
     final database = await DatabaseService().database;
     return await database.rawInsert(
-      '''INSERT INTO $tableName (name,amplitude,time,type,percentageUP,percentageDOWN) VALUES (?,?,?,?,?,?)''',
-      [name, amplitude, time, type, percentageUP, percentageDOWN],
+      '''INSERT INTO $tableName (name,amplitude,time,type,percentageUP,percentageDOWN,reversions) VALUES (?,?,?,?,?,?,?)''',
+      [name, amplitude, time, type, percentageUP, percentageDOWN, reversions],
     );
   }
 
@@ -54,7 +56,8 @@ class SensorialVibrationDB {
       time,
       type,
       percentageUP,
-      percentageDOWN}) async {
+      percentageDOWN,
+      reversions}) async {
     final database = await DatabaseService().database;
     return await database.update(
         tableName,
@@ -64,7 +67,8 @@ class SensorialVibrationDB {
           'time': time,
           'type': type,
           'percentageUP': percentageUP,
-          'percentageDOWN': percentageDOWN
+          'percentageDOWN': percentageDOWN,
+          'reversions': reversions
         },
         where: 'id = ?',
         conflictAlgorithm: ConflictAlgorithm.rollback,

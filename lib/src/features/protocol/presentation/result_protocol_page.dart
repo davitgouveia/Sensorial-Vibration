@@ -7,9 +7,13 @@ import 'package:share_plus/share_plus.dart';
 
 class ResultPage extends StatelessWidget {
   final List<Map<String, dynamic>> protocolSteps;
+  final double medium;
   final String protocolName;
 
-  const ResultPage({required this.protocolSteps, required this.protocolName});
+  const ResultPage(
+      {required this.protocolSteps,
+      required this.protocolName,
+      required this.medium});
 
   List<List<dynamic>> getConvertedProtocolSteps() {
     List<List<dynamic>> data = [];
@@ -20,7 +24,7 @@ class ResultPage extends StatelessWidget {
     // Add data rows
     for (var stepData in protocolSteps) {
       data.add([
-        stepData['Etapa'] ?? 0,
+        stepData['Passo'] ?? 0,
         stepData['Decisao'],
         stepData['Amplitude'],
         stepData['Tempo'],
@@ -49,7 +53,8 @@ class ResultPage extends StatelessWidget {
   // Função de compartilhar
   void shareCSV() async {
     final filePath = await saveDataToCsv();
-    await Share.shareXFiles([XFile(filePath)], text: 'Resultado-$protocolName');
+    await Share.shareXFiles([XFile(filePath)],
+        text: 'Resultado-$protocolName-MediaLimiar-$medium');
   }
 
   @override
@@ -79,23 +84,37 @@ class ResultPage extends StatelessWidget {
               },
               child: const Text('Compartilhar CSV'),
             ),
+            Text(
+              'Média Limiar: $medium',
+              style: const TextStyle(fontSize: 14),
+            ),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: protocolSteps.length,
               itemBuilder: (context, index) {
                 final stepData = protocolSteps[index];
-                return ListTile(
-                  title: Text(
-                    'Etapa: $index',
-                    style: const TextStyle(
-                        fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
-                  ),
-                  subtitle: Text(
-                    'Decisao: ${stepData['Decisao']}, Amplitude ${stepData['Amplitude']}, Tempo ${stepData['Tempo']}, Reversão: ${stepData['Reversao']}',
-                    style: const TextStyle(
+                final backgroundColor = stepData['Reversao'] == 'Sim'
+                    ? const Color.fromRGBO(244, 67, 54, 0.75)
+                    : Colors.white;
+
+                return Container(
+                  color: backgroundColor, // Define a cor de fundo da ListTile.
+                  child: ListTile(
+                    title: Text(
+                      'Passo: $index',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black, // Cor das letras.
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Decisao: ${stepData['Decisao']}, Amplitude ${stepData['Amplitude']}, Tempo ${stepData['Tempo']}, Reversão: ${stepData['Reversao']}',
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Color.fromARGB(255, 109, 109, 109)),
+                        color: Colors.black, // Cor das letras.
+                      ),
+                    ),
                   ),
                 );
               },

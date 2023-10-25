@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ic_app/model/protocols.dart';
 import 'package:ic_app/src/features/protocol/presentation/widget/create_protocols_widget.dart';
-import 'package:ic_app/database/sensorialVibration_db.dart';
+import 'package:ic_app/database/sensorial_vibration_db.dart';
 import 'package:ic_app/src/features/protocol/presentation/run_protocol_page.dart';
 
 class ProtocolsPage extends StatefulWidget {
@@ -61,7 +61,7 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                                   const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
-                                "A(${protocol.amplitude}) T(${protocol.time}) t(${protocol.type}) up(${protocol.percentageUP}) down(${protocol.percentageDOWN})"),
+                                "A(${protocol.amplitude}) T(${protocol.time}) t(${protocol.type}) up(${protocol.percentageUP}) down(${protocol.percentageDOWN}) reversao(${protocol.reversions})"),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -102,7 +102,9 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                                             percentageUP:
                                                 protocolData.percentageUP,
                                             percentageDOWN:
-                                                protocolData.percentageDOWN);
+                                                protocolData.percentageDOWN,
+                                            reversions:
+                                                protocolData.reversions);
                                         fetchProtocols();
                                         if (!mounted) return;
                                         Navigator.of(context).pop();
@@ -127,6 +129,7 @@ class _ProtocolsPageState extends State<ProtocolsPage> {
                   type: protocolData.type,
                   percentageUP: protocolData.percentageUP,
                   percentageDOWN: protocolData.percentageDOWN,
+                  reversions: protocolData.reversions,
                 );
                 if (!mounted) return;
                 fetchProtocols();
